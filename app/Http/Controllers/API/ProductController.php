@@ -24,12 +24,38 @@ class ProductController extends Controller
             $product = Product::with(['category', 'galleries'])->find($id);
 
             if ($product) {
-                return ResponseFormatter::success($product, 'Get Product Success');
+                return ResponseFormatter::success($product, 'Get product success');
             } else {
-                return ResponseFormatter::error(null, 'Get Product is Empty', 404);
+                return ResponseFormatter::error(null, 'Get product is empty', 404);
             }
         }
 
         $products = Product::with(['category', 'galleries']);
+
+        if ($name) {
+            $products->where('name', 'like', '%' . $name . '%');
+        }
+
+        if ($description) {
+            $products->where('description', 'like', '%' . $description . '%');
+        }
+
+        if ($tags) {
+            $products->where('tags', 'like', '%' . $tags . '%');
+        }
+
+        if ($price_from) {
+            $products->where('price', '>=', $price_from);
+        }
+
+        if ($price_to) {
+            $products->where('price', '<=', $price_to);
+        }
+
+        if ($categories) {
+            $products->where('categories', $categories);
+        }
+
+        return ResponseFormatter::success($products->paginate($limit), 'Get products success');
     }
 }
