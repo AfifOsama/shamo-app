@@ -43,8 +43,7 @@ class UserController extends Controller
             ], 'User has registered');
         } catch (Exception $exception) {
             return ResponseFormatter::error([
-                'message' => 'Something went wrong',
-                'error' => $exception,
+                'message' => "Something went wrong: $exception",
             ], 'Authentication failed', 500);
         }
     }
@@ -79,8 +78,7 @@ class UserController extends Controller
             ], 'User has login');
         } catch (Exception $exception) {
             return ResponseFormatter::error([
-                'message' => 'Authentication Failed',
-                'error' => $exception,
+                'message' => "Something went wrong: $exception",
             ], 'Authentication Failed', 500);
         }
     }
@@ -88,5 +86,28 @@ class UserController extends Controller
     public function fetch(Request $request)
     {
         return ResponseFormatter::success($request->user(), 'Get user success');
+    }
+
+    public function updateUser(Request $request)
+    {
+        $data = $request->all();
+
+        try {
+            $request->validate([
+                'name' => ['required', 'string', 'max:255'],
+                'username' => ['required', 'string', 'max:255', 'unique:users'],
+                'email' => ['required', 'string', 'max:255', 'email', 'unique:users'],
+                'phone_number' => ['nullable', 'string', 'max:255'],
+            ]);
+
+            $user = Auth::user();
+            $user->update($data);
+
+            return ResponseFormatter::success($user, 'User profile has updated');
+        } catch (Exception $exception) {
+            return ResponseFormatter::error([
+                'message' => "Something went wrong: $exception",
+            ], 'Update profile failed', 500);
+        }
     }
 }
