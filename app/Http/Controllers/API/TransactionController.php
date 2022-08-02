@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\API;
 
-use App\Helpers\ResponseFormatter;
-use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
 use App\Models\Transaction;
+use Illuminate\Http\Request;
+use App\Models\TransactionItem;
+use App\Helpers\ResponseFormatter;
+use App\Http\Controllers\Controller;
+use Exception;
 use Illuminate\Support\Facades\Auth;
 
 class TransactionController extends Controller
@@ -31,5 +33,45 @@ class TransactionController extends Controller
         }
 
         return ResponseFormatter::success($transactions->paginate($limit), 'Get list transactions success');
+    }
+
+    public function checkout(Request $request)
+    {
+        try {
+
+            $request->validate([
+                'items' => 'required|array',
+                'items.*.id' => 'exists:products,id',
+                'address' => 'required',
+                'price_total' => 'required',
+                'shipment_total' => 'required',
+                'payment_method' => 'required|in:MANUAL',
+                'status' => 'required|in:PENDING,SUCCESS,CANCELLED,FAILED,SHIPPING,SHIPPED',
+            ]);
+
+            $transaction = Transaction::create([
+                'users_id' => Auth::user()->id,
+                'address' => $request->address,
+                'price_total' => $request->price_total,
+                'shipment_total' => $request->shipment_total,
+                'payment_method' => $request->payment_method,
+                'status' => $request->status,
+            ]);
+
+            foreach ($request->items as $product) {
+                TransactionItem::create([
+                    'users_id' => Auth::user()->id,
+                    'products_id' => $request['id'],
+                    'transactions_id' => $transaction->id,
+                    'quantity' => $request['quantity'],
+                ]);
+            };
+
+            return ResponseFormatter::success($transaction->load('items.product'), 'Checkout success');
+        } catch (Exception $exception) {
+            return ResponseFormatter::error([
+                "message" => "Something went wrong: $exception",
+            ], 'Checkout failed', 500);
+        }
     }
 }
