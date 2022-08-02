@@ -69,8 +69,9 @@ class TransactionController extends Controller
 
             return ResponseFormatter::success($transaction->load('items.product'), 'Checkout success');
         } catch (Exception $exception) {
+            $error = preg_split('#\r?\n#', $exception, 2)[0];
             return ResponseFormatter::error([
-                "message" => "Something went wrong: $exception",
+                "message" => "Something went wrong: $error",
             ], 'Checkout failed', 500);
         }
     }

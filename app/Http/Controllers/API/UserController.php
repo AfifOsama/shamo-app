@@ -77,8 +77,9 @@ class UserController extends Controller
                 'user' => $user,
             ], 'User has login');
         } catch (Exception $exception) {
+            $error = preg_split('#\r?\n#', $exception, 2)[0];
             return ResponseFormatter::error([
-                'message' => "Something went wrong: $exception",
+                'message' => "Something went wrong: $error",
             ], 'Authentication Failed', 500);
         }
     }
@@ -105,8 +106,10 @@ class UserController extends Controller
 
             return ResponseFormatter::success($user, 'User profile has updated');
         } catch (Exception $exception) {
+            $error = preg_split('#\r?\n#', $exception, 2)[0];
+
             return ResponseFormatter::error([
-                'message' => "Something went wrong: $exception",
+                'message' => "Something went wrong: $error",
             ], 'Update profile failed', 500);
         }
     }
